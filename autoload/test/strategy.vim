@@ -38,6 +38,12 @@ function! test#strategy#make(cmd) abort
   endtry
 endfunction
 
+function! test#strategy#neomake(cmd) abort
+  let executable = split(a:cmd, ' ')[0]
+  let maker = {'exe': executable, 'args': substitute(a:cmd, executable, '',''),  'errorformat': &l:errorformat}
+  call neomake#Make(0, [maker])
+endfunction
+
 function! test#strategy#asyncrun(cmd) abort
   execute 'AsyncRun '.a:cmd
 endfunction
