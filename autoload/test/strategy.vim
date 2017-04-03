@@ -39,9 +39,27 @@ function! test#strategy#make(cmd) abort
 endfunction
 
 function! test#strategy#neomake(cmd) abort
-  let executable = split(a:cmd, ' ')[0]
-  let maker = {'exe': executable, 'args': substitute(a:cmd, executable, '',''),  'errorformat': &l:errorformat}
-  call neomake#Make(0, [maker])
+  let compiler = dispatch#compiler_for_program(a:cmd)
+
+  try
+    let default_makeprg = &l:makeprg
+    let default_errorformat = &l:errorformat
+    let default_compiler = get(b:, 'current_compiler', '')
+    if !empty(compiler)
+      execute 'compiler ' . compiler
+    endif
+    let executable = split(a:cmd, ' ')[0]
+    let maker = {'exe': executable, 'args': substitute(a:cmd, executable, '',''),  'errorformat': &l:errorformat}
+    call neomake#Make(0, [maker])
+  finally
+    let &l:makeprg = default_makeprg
+    let &l:errorformat = default_errorformat
+    if empty(default_compiler)
+      unlet! b:current_compiler
+    else
+      let b:current_compiler = default_compiler
+    endif
+  endtry
 endfunction
 
 function! test#strategy#asyncrun(cmd) abort
