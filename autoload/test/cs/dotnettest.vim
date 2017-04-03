@@ -9,9 +9,18 @@ endfunction
 function! test#cs#dotnettest#build_position(type, position) abort
   let file = a:position['file']
   let filename = fnamemodify(file, ':t:r')
-  let filepath = fnamemodify(file, ':.:h')
-  let projectPath = split(filepath, '/')[0]
-  let projectPath = projectPath . '/' . projectPath . '.csproj'
+  let filedir = fnamemodify(file, ':.:h')
+  let projfiles = split(glob(filedir . '/*.csproj'), '\n')
+  let search_for_csproj = 1
+
+  while len(projfiles) == 0 && search_for_csproj
+    let filedirparts = split(filedir, '/') 
+    let search_for_csproj = len(filedir) > 0
+    let filedir = filedirparts[0]
+    let projfiles = split(glob(filedir . '/*.csproj'), '\n')
+  endwhile
+
+  let projectPath = projfiles[0]
 
   if a:type == 'nearest'
     let name = s:nearest_test(a:position)
