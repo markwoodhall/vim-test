@@ -15,11 +15,13 @@ function! test#cs#dotnettest#build_position(type, position) abort
 
   while len(projfiles) == 0 && search_for_csproj
     let filedirparts = split(filedir, '/') 
-    let search_for_csproj = len(filedir) > 0
+    let search_for_csproj = len(filedir) > 1
     let filedir = filedirparts[0]
     let projfiles = split(glob(filedir . '/*.csproj'), '\n')
   endwhile
 
+  if len(projfiles) == 0
+    throw 'Unable to find .csproj file, a .csproj file is required to make use of the `dotnet test` command.'
   let projectPath = projfiles[0]
 
   if a:type == 'nearest'
