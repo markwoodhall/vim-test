@@ -9,19 +9,21 @@ endfunction
 function! test#cs#dotnettest#build_position(type, position) abort
   let file = a:position['file']
   let filename = fnamemodify(file, ':t:r')
-  let filedir = fnamemodify(file, ':.:h')
+  let filedir = fnamemodify(file, ':p:h')
   let projfiles = split(glob(filedir . '/*.csproj'), '\n')
   let search_for_csproj = 1
 
   while len(projfiles) == 0 && search_for_csproj
     let filedirparts = split(filedir, '/') 
     let search_for_csproj = len(filedir) > 1
-    let filedir = filedirparts[0]
+    let filedir = '/'.join(filedirparts[0:-2], '/')
     let projfiles = split(glob(filedir . '/*.csproj'), '\n')
   endwhile
 
   if len(projfiles) == 0
     throw 'Unable to find .csproj file, a .csproj file is required to make use of the `dotnet test` command.'
+  endif
+
   let projectPath = projfiles[0]
 
   if a:type == 'nearest'
