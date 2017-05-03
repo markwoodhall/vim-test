@@ -1,5 +1,5 @@
 if !exists('g:test#clojure#fireplacetest#file_pattern')
-  let g:test#clojure#fireplacetest#file_pattern = '\v(_test|^test/.+)\.cljs?$'
+  let g:test#clojure#fireplacetest#file_pattern = '\v(_test|^test/.+)\.(cljs|clj|cljc)?$'
 end
 
 function! test#clojure#fireplacetest#test_file(file) abort
