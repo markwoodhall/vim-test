@@ -1,14 +1,14 @@
-if !exists('g:test#csharp#nunit#file_pattern')
-  let g:test#csharp#nunit#file_pattern = '\.cs$'
+if !exists('g:test#csharp#tcucumber#file_pattern')
+  let g:test#csharp#cucumber#file_pattern = '\.feature$'
 endif
 
-function! test#csharp#nunit#test_file(file) abort
-  return a:file =~? g:test#csharp#nunit#file_pattern
+function! test#csharp#cucumber#test_file(file) abort
+  return a:file =~? g:test#csharp#cucumber#file_pattern
 endfunction
 
-function! test#csharp#nunit#build_position(type, position) abort
+function! test#csharp#cucumber#build_position(type, position) abort
   let file = a:position['file']
-  let filename = substitute(substitute(expand('%t:%r'), '/', '.', 'g'), '.cs', '', '')
+  let filename = substitute(substitute(expand('%t:%r'), '/', '.', 'g'), '.\w*.feature', '', '')
   let filepath = fnamemodify(file, ':p:h')
   let project_files = split(glob(filepath . '/*.csproj'), '\n')
   let search_for_csproj = 1
@@ -30,27 +30,34 @@ function! test#csharp#nunit#build_position(type, position) abort
 
   let project_path = project_path . '/bin/debug/' . substitute(project_name, '.csproj', '.dll', '')
 
+  let ns = filename
+  let l = getline(1)
+  if l =~ '^Feature:\s\w.*'
+    let feature_parts = split(split(l, ': ')[-1], ' ')
+    let camel_feature_parts = []
+    for f in feature_parts
+      let camel_feature_parts += [toupper(f[0]), f[1:-1]]
+    endfor
+    let ns = filename .'.'. join(camel_feature_parts, '') . 'Feature'
+  endif
   if a:type == 'nearest'
     let name = s:nearest_test(a:position)
-    if !empty(name)
-      let ns = filename
-      for l in getline(0, '$')
-        if l =~ '^namespace\s\w.*'
-          let ns = split(l, '\s')[-1]
-        endif
-      endfor
-      return [ns .'.'. name, project_path]
-    else
-      return [filename, project_path]
-    endif
+    let scenario_parts = split(split(name, ': ')[-1], ' ')
+    let camel_scenario_parts = []
+    for f in scenario_parts
+      let camel_scenario_parts += [toupper(f[0]), f[1:-1]]
+    endfor
+    let scenario = ns .'.'. join(camel_scenario_parts, '')
+
+    return [scenario, project_path]
   elseif a:type == 'file'
-    return [filename, project_path]
+    return [ns, project_path]
   else
     return ['*', project_path]
   endif
 endfunction
 
-function! test#csharp#nunit#build_args(args) abort
+function! test#csharp#cucumber#build_args(args) abort
   let filter = ''
   if a:args[0] != '*'
     let filter = a:args[0]
@@ -60,7 +67,7 @@ function! test#csharp#nunit#build_args(args) abort
   return [join(args, joiner)]
 endfunction
 
-function! test#csharp#nunit#executable() abort
+function! test#csharp#cucumber#executable() abort
   return 'nunit'
 endfunction
 
@@ -69,5 +76,4 @@ function! s:nearest_test(position) abort
   if !empty(name['test']) 
     return join(name['test'], '.')
   endif
-  return join(name['namespace'], '.')
 endfunction
